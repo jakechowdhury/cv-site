@@ -1,0 +1,59 @@
+/*
+ * Custom styles extending PaperMod for Jake's CV site.
+ * Place at: assets/css/extended/custom.css
+ * PaperMod automatically picks up files in this directory.
+ */
+
+/* ── Open-to-work badge on the home info panel ── */
+.home-info-content::before {
+  content: "● Open to New Roles";
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #10b981 15%, transparent);
+  color: #10b981;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Cert badge table — centre-align images ── */
+.post-content table td:first-child {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.post-content table td:first-child img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+/* ── Stack table — bolder first column ── */
+.post-content table td:first-child strong {
+  color: var(--primary);
+}
+
+/* ── Subtle entry animation for post list ── */
+.post-entry {
+  animation: fadeUp 0.3s ease both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Social icons spacing on home panel ── */
+.social-icons {
+  margin-top: 1rem;
+}
