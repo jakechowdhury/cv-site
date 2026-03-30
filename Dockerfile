@@ -7,7 +7,7 @@ WORKDIR /src
 COPY . .
 
 # Clone PaperMod theme after COPY so it doesn't conflict with BuildKit cache mounts
-RUN git clone --depth 1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
+git submodule add --depth=1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
 
 # Build — minify, no drafts
 RUN hugo --minify --environment production
