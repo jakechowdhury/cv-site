@@ -3,11 +3,11 @@ FROM hugomods/hugo:exts AS builder
 
 WORKDIR /src
 
-# Clone PaperMod theme directly — no submodule or go.mod needed
-RUN git clone --depth 1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
-
-# Copy source (themes/ is now populated above, .dockerignore should exclude local themes/)
+# Copy source first
 COPY . .
+
+# Clone PaperMod theme after COPY so it doesn't conflict with BuildKit cache mounts
+RUN git clone --depth 1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
 
 # Build — minify, no drafts
 RUN hugo --minify --environment production
