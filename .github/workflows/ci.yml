@@ -16,7 +16,8 @@ jobs:
     permissions:
       contents: read
       packages: write
-      security-events: write   # for Trivy SARIF upload
+      security-events: write   # required for Trivy SARIF upload to GitHub Security tab
+      actions: read            # required by codeql-action/upload-sarif on private repos
 
     steps:
       - name: Checkout
@@ -63,20 +64,23 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ── Security: Trivy image scan ───────────────────────────────────────────
+      # Scans the pushed image. Skipped on PRs since the image isn't pushed yet.
       - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
-        if: github.event_name != 'pull_request'
+          exit-code: '0'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Trivy results to GitHub Security tab
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
-        if: github.event_name != 'pull_request'
+          category: trivy-image-scan
 
       # ── Open image-tag PR to cv-gitops ──────────────────────────────────────
       - name: Update image tag in cv-gitops
