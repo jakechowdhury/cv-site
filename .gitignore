@@ -6,9 +6,6 @@ resources/_gen/
 # Hugo module cache
 /tmp/
 
-# Theme
-themes/
-
 # Docker
 .dockerignore.bak
 

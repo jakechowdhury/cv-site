@@ -3,11 +3,8 @@ FROM hugomods/hugo:exts AS builder
 
 WORKDIR /src
 
-# Copy source first
+# Copy source — themes/PaperMod populated by git submodule
 COPY . .
-
-# Clone PaperMod theme after COPY so it doesn't conflict with BuildKit cache mounts
-git submodule add --depth=1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
 
 # Build — minify, no drafts
 RUN hugo --minify --environment production
