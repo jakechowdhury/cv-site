@@ -112,9 +112,12 @@ jobs:
 
             // Replace image tag (matches: newTag: sha-<7chars>)
             const updated = content.replace(
-              /newTag: sha-[a-f0-9]{7}/,
+              /newTag: (?:"latest"|sha-[a-f0-9]{7})/,
               `newTag: ${newTag}`
             );
+            if (updated === content) {
+              throw new Error(`Failed to replace image tag in ${filePath} — regex matched nothing. Current content:\n${content}`);
+            };
 
             // Create branch + commit
             const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: 'heads/main' });
