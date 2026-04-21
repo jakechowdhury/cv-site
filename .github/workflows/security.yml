@@ -1,4 +1,4 @@
-name: Checkov Security Scan
+name: Security Scans
 
 on:
   pull_request:
