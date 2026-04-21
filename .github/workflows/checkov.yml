@@ -1,0 +1,70 @@
+name: Checkov Security Scan
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/**'
+
+permissions: {}
+
+jobs:
+  checkov:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov — Dockerfile
+        id: checkov-dockerfile
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          file: Dockerfile
+          framework: dockerfile
+          soft_fail: true
+          output_format: cli
+          output_file_path: checkov-dockerfile-results
+
+      - name: Run Checkov — GitHub Actions
+        id: checkov-gha
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .github/workflows
+          framework: github_actions
+          soft_fail: true
+          output_format: cli
+          output_file_path: checkov-gha-results
+
+      - name: Write Checkov results to job summary
+        if: always()
+        run: |
+          echo "## Checkov Scan Results" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Dockerfile" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat checkov-dockerfile-results/results_cli.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          echo "### GitHub Actions" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat checkov-gha-results/results_cli.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if Checkov found issues
+        if: always()
+        run: |
+          FAILED=0
+
+          if grep -q "Failed checks: [^0]" checkov-dockerfile-results/results_cli.txt; then
+            echo "ERROR: Checkov found failures in Dockerfile"
+            FAILED=1
+          fi
+
+          if grep -q "Failed checks: [^0]" checkov-gha-results/results_cli.txt; then
+            echo "ERROR: Checkov found failures in GitHub Actions workflows"
+            FAILED=1
+          fi
+
+          exit $FAILED
