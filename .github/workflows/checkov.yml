@@ -25,7 +25,7 @@ jobs:
           framework: dockerfile
           soft_fail: true
           output_format: cli
-          output_file_path: checkov-dockerfile.txt
+          output_file_path: checkov-dockerfile-results
 
       - name: Run Checkov — GitHub Actions
         id: checkov-gha
@@ -35,7 +35,7 @@ jobs:
           framework: github_actions
           soft_fail: true
           output_format: cli
-          output_file_path: checkov-gha.txt
+          output_file_path: checkov-gha-results
 
       - name: Write Checkov results to job summary
         if: always()
@@ -44,12 +44,12 @@ jobs:
 
           echo "### Dockerfile" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat checkov-dockerfile.txt >> $GITHUB_STEP_SUMMARY
+          cat checkov-dockerfile-results/results_cli.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
           echo "### GitHub Actions" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat checkov-gha.txt >> $GITHUB_STEP_SUMMARY
+          cat checkov-gha-results/results_cli.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Fail if Checkov found issues
@@ -57,12 +57,12 @@ jobs:
         run: |
           FAILED=0
 
-          if grep -q "Failed checks: [^0]" checkov-dockerfile.txt; then
+          if grep -q "Failed checks: [^0]" checkov-dockerfile-results/results_cli.txt; then
             echo "ERROR: Checkov found failures in Dockerfile"
             FAILED=1
           fi
 
-          if grep -q "Failed checks: [^0]" checkov-gha.txt; then
+          if grep -q "Failed checks: [^0]" checkov-gha-results/results_cli.txt; then
             echo "ERROR: Checkov found failures in GitHub Actions workflows"
             FAILED=1
           fi
