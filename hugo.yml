@@ -1,0 +1,116 @@
+baseURL: "https://cv.jakechowdhury.co.uk/"
+title: "Jake Chowdhury — Senior DevOps Engineer"
+pagination:
+  pagerSize: 5
+theme: PaperMod
+
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON # required for search
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+params:
+  env: production
+  title: "Jake Chowdhury"
+  description: >
+    Senior DevOps Engineer with 10+ years experience delivering scalable,
+    cost-efficient cloud infrastructure and automation.
+  author: "Jake Chowdhury"
+  defaultTheme: auto
+  disableThemeToggle: false
+
+  ShowReadingTime: false
+  ShowShareButtons: false
+  ShowPostNavLinks: false
+  ShowBreadCrumbs: false
+  ShowCodeCopyButtons: true
+  ShowFullTextinRSS: true
+  ShowRssButtonInSectionTermList: false
+  disableSpecial1stPost: false
+  disableScrollToTop: false
+  comments: false
+  hidemeta: false
+  hideSummary: false
+  showtoc: false
+
+  # Home-Info mode — shows a rich intro panel as the first "post"
+  homeInfoParams:
+    Title: "Jake Chowdhury"
+    Content: |
+      Senior DevOps Engineer · 10+ years · Machester, UK
+
+      Expertise in orchestrating distributed systems across AWS, GCP and Azure.
+      Experienced in designing resilient, observable, and highly available
+      distributed systems at scale.
+
+  socialIcons:
+    - name: linkedin
+      url: "https://uk.linkedin.com/in/jake-chowdhury-7b715b49"
+    - name: github
+      url: "https://github.com/"
+    - name: email
+      url: "mailto:contact@devops.engineer"
+
+  # Cover images
+  cover:
+    hidden: false
+    hiddenInList: false
+    hiddenInSingle: false
+    responsiveImages: true
+
+  # Search (Fuse.js)
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    keys: ["title", "permalink", "summary", "content"]
+
+menu:
+  main:
+    - identifier: experience
+      name: Experience
+      url: /experience/
+      weight: 10
+    - identifier: stack
+      name: Stack
+      url: /stack/
+      weight: 20
+    - identifier: certs
+      name: Certs
+      url: /certs/
+      weight: 30
+    - identifier: why
+      name: Why Is This Here
+      url: /why/
+      weight: 40
+    - identifier: search
+      name: Search
+      url: /search/
+      weight: 50
+
+pygmentsUseClasses: true
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true      # allows raw HTML in markdown (needed for badge images)
+  highlight:
+    noClasses: false
+    anchorLineNos: true
+    codeFences: true
+    guessSyntax: true
+    lineNos: true
+    style: monokai
