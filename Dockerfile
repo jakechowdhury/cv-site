@@ -8,7 +8,7 @@ ARG BUILD_DATE=unknown
 WORKDIR /src
 COPY . .
 
-RUN if [ "$IMAGE_VERSION" != "dev" ]; then \
+RUN if echo "$IMAGE_VERSION" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then \
       FILE_VERSION=$(cat VERSION); \
       TAG_VERSION=$(echo "$IMAGE_VERSION" | sed 's/^v//'); \
       if [ "$FILE_VERSION" != "$TAG_VERSION" ]; then \
@@ -16,6 +16,8 @@ RUN if [ "$IMAGE_VERSION" != "dev" ]; then \
         exit 1; \
       fi; \
       echo "OK: VERSION file matches tag: ${FILE_VERSION}"; \
+    else \
+      echo "INFO: Non-release build (${IMAGE_VERSION}), skipping VERSION file check"; \
     fi
 
 ENV HUGO_PARAMS_APPVERSION=$IMAGE_VERSION
