@@ -3,25 +3,18 @@ FROM hugomods/hugo:exts AS builder
 
 WORKDIR /src
 
-# Copy source — themes/PaperMod populated by git submodule
 COPY . .
 
-# Build — minify, no drafts
 RUN hugo --minify --environment production
 
 # ── Stage 2: Serve with Nginx (Alpine) ────────────────────────────────────────
 FROM nginx:alpine
 
-# Non-root user (matches SecurityContext in k8s manifests)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy built site
 COPY --from=builder /src/public /usr/share/nginx/html
-
-# Minimal Nginx config — security headers, cache headers for static assets
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Fix permissions
 RUN chown -R appuser:appgroup /usr/share/nginx/html \
     && chown -R appuser:appgroup /var/cache/nginx \
     && chown -R appuser:appgroup /var/log/nginx \
@@ -29,6 +22,9 @@ RUN chown -R appuser:appgroup /usr/share/nginx/html \
     && chown appuser:appgroup /var/run/nginx.pid
 
 USER appuser
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD wget -qO- http://localhost:8080/ || exit 1
 
 EXPOSE 8080
 
