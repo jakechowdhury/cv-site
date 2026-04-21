@@ -1,10 +1,11 @@
-name: Checkov Security Scan
+name: Security Scans
 
 on:
   pull_request:
     paths:
       - 'Dockerfile'
       - '.github/workflows/**'
+      - 'nginx.conf'
 
 permissions: {}
 
@@ -68,3 +69,24 @@ jobs:
           fi
 
           exit $FAILED
+
+  gixy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Run gixy — nginx config
+        if: hashFiles('nginx.conf') != ''
+        run: |
+          pip install gixy --break-system-packages
+
+          echo "## Gixy nginx Security Scan" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          gixy nginx.conf 2>&1 | tee gixy-results.txt || true
+          cat gixy-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          if grep -q "Problems: [^0]" gixy-results.txt; then
+            echo "ERROR: gixy found security issues in nginx.conf"
+            exit 1
+          fi

@@ -1,0 +1,18 @@
+{{- if not (.Param "hideFooter") }}
+<footer class="footer">
+    <span>&copy; {{ now.Year }} <a href="{{ .Site.BaseURL }}">{{ .Site.Params.author }}</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &amp;
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+    {{- if .Site.Params.appversion }}
+    <span class="build-info">
+        {{ .Site.Params.appversion }}
+        {{- if .Site.Params.gitcommit }}
+        &middot; <a href="https://github.com/jakechowdhury/cv-site/commit/{{ .Site.Params.gitcommit }}" target="_blank" rel="noopener">{{ substr .Site.Params.gitcommit 0 7 }}</a>
+        {{- end }}
+    </span>
+    {{- end }}
+</footer>
+{{- end }}
