@@ -1,21 +1,45 @@
-# ── Stage 1: Build Hugo site ──────────────────────────────────────────────────
+# Stage 1: Build Hugo site
 FROM hugomods/hugo:exts AS builder
 
-WORKDIR /src
+ARG IMAGE_VERSION=dev
+ARG GIT_COMMIT=unknown
+ARG BUILD_DATE=unknown
 
+WORKDIR /src
 COPY . .
+
+RUN if [ "$IMAGE_VERSION" != "dev" ]; then \
+      FILE_VERSION=$(cat VERSION); \
+      TAG_VERSION=$(echo "$IMAGE_VERSION" | sed 's/^v//'); \
+      if [ "$FILE_VERSION" != "$TAG_VERSION" ]; then \
+        echo "ERROR: VERSION file (${FILE_VERSION}) does not match image tag (${IMAGE_VERSION})"; \
+        exit 1; \
+      fi; \
+      echo "OK: VERSION file matches tag: ${FILE_VERSION}"; \
+    fi
+
+ENV HUGO_PARAMS_APPVERSION=$IMAGE_VERSION
+ENV HUGO_PARAMS_GITCOMMIT=$GIT_COMMIT
 
 RUN hugo --minify --environment production
 
-# ── Stage 2: Serve with Nginx (Alpine) ────────────────────────────────────────
+# Stage 2: Serve with Nginx (Alpine)
 FROM nginx:alpine
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+ARG IMAGE_VERSION=dev
+ARG GIT_COMMIT=unknown
+ARG BUILD_DATE=unknown
 
 COPY --from=builder /src/public /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN chown -R appuser:appgroup /usr/share/nginx/html \
+RUN sed -i "s/__APP_VERSION__/${IMAGE_VERSION}/" /etc/nginx/conf.d/default.conf \
+    && printf '{"version":"%s","commit":"%s","built":"%s"}\n' \
+       "${IMAGE_VERSION}" "${GIT_COMMIT}" "${BUILD_DATE}" \
+       > /usr/share/nginx/html/version.json
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && chown -R appuser:appgroup /usr/share/nginx/html \
     && chown -R appuser:appgroup /var/cache/nginx \
     && chown -R appuser:appgroup /var/log/nginx \
     && touch /var/run/nginx.pid \
