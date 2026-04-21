@@ -45,9 +45,9 @@ jobs:
           echo "previous_tag=${PREVIOUS_TAG}" >> $GITHUB_OUTPUT
 
           if [ -z "$PREVIOUS_TAG" ]; then
-            LOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+            LOG=$(git log --pretty=format:"- %s%n%b" HEAD)
           else
-            LOG=$(git log --pretty=format:"- %s (%h)" ${PREVIOUS_TAG}..HEAD)
+            LOG=$(git log --pretty=format:"- %s%n%b" ${PREVIOUS_TAG}..HEAD)
           fi
 
           {
