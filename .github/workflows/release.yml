@@ -99,12 +99,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITOPS_PAT }}
           script: |
-            const tag = context.ref.replace('refs/tags/', '');
+            const tag = context.ref.replace('refs/tags/', '');        // v0.1.0
+            const imageTag = tag.replace(/^v/, '');                    // 0.1.0
             const previousTag = '${{ steps.changelog.outputs.previous_tag }}';
             const changelog = `${{ steps.changelog.outputs.log }}`;
             const owner = 'jakechowdhury';
             const repo = 'cv-gitops';
-            const branch = `update-cv-site-${tag}`;
+            const branch = `update-cv-site-${imageTag}`;
             const filePath = 'apps/cv-site/kustomization.yaml';
 
             const compareUrl = previousTag
@@ -115,8 +116,8 @@ jobs:
             const content = Buffer.from(file.content, 'base64').toString();
 
             const updated = content.replace(
-              /newTag: (?:"latest"|sha-[a-f0-9]{7}|v\d+\.\d+\.\d+)/,
-              `newTag: ${tag}`
+              /newTag: (?:"latest"|sha-[a-f0-9]{7}|v?\d+\.\d+\.\d+)/,
+              `newTag: ${imageTag}`
             );
 
             if (updated === content) {
@@ -135,9 +136,9 @@ jobs:
 
             await github.rest.pulls.create({
               owner, repo, head: branch, base: 'main',
-              title: `chore: update cv-site image to ${tag}`,
+              title: `chore: update cv-site image to ${imageTag}`,
               body: [
-                `## cv-site ${tag}`,
+                `## cv-site ${tag}`,          // keep v prefix in the heading for readability
                 '',
                 '### Changes',
                 changelog || '_No commit messages found._',
