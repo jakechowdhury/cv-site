@@ -1,4 +1,3 @@
-# .github/workflows/checkov.yaml
 name: Checkov Security Scan
 
 on:

@@ -11,11 +11,10 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-and-scan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout
@@ -23,115 +22,101 @@ jobs:
         with:
           submodules: recursive
 
-      # ── Docker buildx (multi-arch: amd64 + arm64) ───────────────────────────
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # ── Extract image metadata ───────────────────────────────────────────────
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      # ── Build (and push on main) ─────────────────────────────────────────────
-      - name: Build and push image
-        id: build-push
-        uses: docker/build-push-action@v5
+      - name: Build image (amd64, local)
+        uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: cv-site:scan
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ── Security: Trivy image scan ───────────────────────────────────────────
-      # Outputs a table to the Actions log and saves a SARIF artifact to download.
-      # SARIF upload to the Security tab requires GitHub Advanced Security (orgs only)
-      # so we save the results as a downloadable artifact instead.
-      - name: Run Trivy vulnerability scanner
-        if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@master
+      - name: Trivy scan (table — fails on CRITICAL/HIGH)
+        uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          format: table             # prints findings directly to the Actions log
+          image-ref: cv-site:scan
+          format: table
           severity: CRITICAL,HIGH
-          exit-code: '0'            # report only — don't fail the build on findings
+          exit-code: '1'
 
-      - name: Run Trivy (SARIF output for artifact)
-        if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@master
+      - name: Trivy scan (SARIF artifact)
+        if: always()
+        uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          image-ref: cv-site:scan
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
           exit-code: '0'
 
-      - name: Upload Trivy results as artifact
-        if: github.event_name != 'pull_request'
+      - name: Upload Trivy SARIF artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trivy-results-${{ github.sha }}
           path: trivy-results.sarif
           retention-days: 30
 
-      # ── Open image-tag PR to cv-gitops ──────────────────────────────────────
-      - name: Update image tag in cv-gitops
-        if: github.event_name != 'pull_request'
-        uses: actions/github-script@v7
+  verify-version-bump:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
         with:
-          github-token: ${{ secrets.GITOPS_PAT }}
-          script: |
-            const sha = context.sha.substring(0, 7);
-            const newTag = `sha-${sha}`;
-            const owner = 'jakechowdhury';
-            const repo = 'cv-gitops';
-            const branch = `update-cv-site-${sha}`;
-            const filePath = 'apps/cv-site/base/kustomization.yaml';
+          fetch-depth: 0
 
-            // Get current file
-            const { data: file } = await github.rest.repos.getContent({ owner, repo, path: filePath });
-            const content = Buffer.from(file.content, 'base64').toString();
+      - name: Check VERSION file exists
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "ERROR: VERSION file missing from repo root"
+            exit 1
+          fi
+          echo "OK: VERSION file exists: $(cat VERSION)"
 
-            // Replace image tag (matches: newTag: sha-<7chars>)
-            const updated = content.replace(
-              /newTag: (?:"latest"|sha-[a-f0-9]{7})/,
-              `newTag: ${newTag}`
-            );
-            if (updated === content) {
-              throw new Error(`Failed to replace image tag in ${filePath} — regex matched nothing. Current content:\n${content}`);
-            };
+      - name: Validate VERSION format
+        run: |
+          VERSION=$(cat VERSION)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "ERROR: VERSION must be semver (e.g. 1.2.0), got: ${VERSION}"
+            exit 1
+          fi
+          echo "OK: VERSION format valid: ${VERSION}"
 
-            // Create branch + commit
-            const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: 'heads/main' });
-            await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branch}`, sha: ref.object.sha });
-            await github.rest.repos.createOrUpdateFileContents({
-              owner, repo, path: filePath, message: `chore: update cv-site image to ${newTag}`,
-              content: Buffer.from(updated).toString('base64'),
-              sha: file.sha,
-              branch,
-            });
+      - name: Check VERSION was bumped relative to main
+        run: |
+          CURRENT=$(cat VERSION)
+          MAIN=$(git show origin/main:VERSION 2>/dev/null || echo "0.0.0")
 
-            // Open PR
-            await github.rest.pulls.create({
-              owner, repo, head: branch, base: 'main',
-              title: `chore: update cv-site image to ${newTag}`,
-              body: `Automated image tag update from cv-site@${context.sha}`,
-            });
+          echo "main:    ${MAIN}"
+          echo "PR:      ${CURRENT}"
+
+          if [ "$CURRENT" = "$MAIN" ]; then
+            echo "ERROR: VERSION has not been bumped (still ${CURRENT})"
+            echo "       Bump VERSION in this PR before merging."
+            exit 1
+          fi
+          echo "OK: VERSION bumped: ${MAIN} -> ${CURRENT}"
+
+      - name: Check VERSION is higher than main
+        run: |
+          CURRENT=$(cat VERSION)
+          MAIN=$(git show origin/main:VERSION 2>/dev/null || echo "0.0.0")
+
+          HIGHER=$(printf '%s\n%s' "$MAIN" "$CURRENT" | sort -V | tail -n1)
+          if [ "$HIGHER" != "$CURRENT" ]; then
+            echo "ERROR: VERSION must be higher than main (${MAIN}), got: ${CURRENT}"
+            exit 1
+          fi
+          echo "OK: VERSION is higher than main: ${MAIN} -> ${CURRENT}"
+
+      - name: Verify VERSION matches tag format we will create
+        run: |
+          VERSION=$(cat VERSION)
+          echo "INFO: Release tag will be: v${VERSION}"
+          echo "INFO: Run: git tag v${VERSION} && git push origin v${VERSION}"
