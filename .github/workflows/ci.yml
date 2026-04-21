@@ -37,7 +37,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trivy scan (table — fails on CRITICAL/HIGH)
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: cv-site:scan
           format: table
@@ -46,7 +46,7 @@ jobs:
 
       - name: Trivy scan (SARIF artifact)
         if: always()
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: cv-site:scan
           format: sarif
