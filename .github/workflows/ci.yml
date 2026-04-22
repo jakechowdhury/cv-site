@@ -182,7 +182,7 @@ jobs:
         env:
           HUGO_PARAMS_APPVERSION: pr-${{ github.event.pull_request.number }}
           HUGO_PARAMS_GITCOMMIT: ${{ github.sha }}
-        run: hugo --minify --environment production
+        run: hugo --minify --environment production --baseURL "https://jakechowdhury.github.io/cv-site/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
