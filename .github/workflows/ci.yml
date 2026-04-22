@@ -175,14 +175,14 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: 'latest'
+          hugo-version: '0.145.0'
           extended: true
 
       - name: Build Hugo site
         env:
           HUGO_PARAMS_APPVERSION: pr-${{ github.event.pull_request.number }}
           HUGO_PARAMS_GITCOMMIT: ${{ github.sha }}
-        run: hugo --minify --baseURL "/"
+        run: hugo --baseURL "/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
