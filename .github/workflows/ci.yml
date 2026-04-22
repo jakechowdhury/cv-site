@@ -79,7 +79,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: github.event_name == 'pull_request'
+    if: |
+      github.event_name == 'pull_request' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-version-bump')
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
