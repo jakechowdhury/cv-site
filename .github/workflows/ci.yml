@@ -135,3 +135,21 @@ jobs:
           VERSION=$(cat VERSION)
           echo "INFO: Release tag will be: v${VERSION}"
           echo "INFO: Run: git tag v${VERSION} && git push origin v${VERSION}"
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog scan
+        uses: trufflesecurity/trufflehog@v3.95.2
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
