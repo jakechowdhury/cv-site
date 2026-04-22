@@ -79,7 +79,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: github.event_name == 'pull_request'
+    if: |
+      github.event_name == 'pull_request' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-version-bump')
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
@@ -135,3 +137,100 @@ jobs:
           VERSION=$(cat VERSION)
           echo "INFO: Release tag will be: v${VERSION}"
           echo "INFO: Run: git tag v${VERSION} && git push origin v${VERSION}"
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog scan
+        uses: trufflesecurity/trufflehog@v3.95.2
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+  preview-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      pages: write
+      id-token: write
+    if: github.event_name == 'pull_request'
+    environment:
+      name: pr-preview-${{ github.event.pull_request.number }}
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.154.5'
+          extended: true
+
+      - name: Build Hugo site
+        env:
+          HUGO_PARAMS_APPVERSION: pr-${{ github.event.pull_request.number }}
+          HUGO_PARAMS_GITCOMMIT: ${{ github.sha }}
+        run: hugo --minify --environment production --baseURL "https://jakechowdhury.github.io/cv-site/"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Comment on PR with preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.page_url }}';
+            const sha = '${{ github.sha }}';
+            const pr = context.issue.number;
+            const body = [
+              '## Preview Deployment',
+              '',
+              `**URL:** ${url}`,
+              `**Commit:** \`${sha.substring(0, 7)}\``,
+              `**PR:** #${pr}`,
+              '',
+              '_This preview is updated on every push to this PR._',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr,
+            });
+
+            const existing = comments.find(c => c.body.startsWith('## Preview Deployment'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr,
+                body,
+              });
+            }
