@@ -36,5 +36,7 @@ lint: ## Run all pre-commit hooks
 release: ## Tag and push a release from main
 	@test "$$(git branch --show-current)" = "main" || (echo "Must be on main branch"; exit 1)
 	@test -z "$$(git status --porcelain)" || (echo "Working tree is dirty"; exit 1)
+	@git fetch origin main
+	@test "$$(git rev-list HEAD..origin/main --count)" = "0" || (echo "Behind origin/main, pull first"; exit 1)
 	git tag v$(IMAGE_VERSION)
 	git push origin v$(IMAGE_VERSION)
