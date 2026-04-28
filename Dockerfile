@@ -1,9 +1,19 @@
 # Stage 1: Build Hugo site
-FROM hugomods/hugo:exts AS builder
+ARG HUGO_VERSION
+ARG NGINX_VERSION
 
+# Stage 1: Build Hugo site
+FROM debian:bookworm-slim AS builder
+
+ARG HUGO_VERSION
 ARG IMAGE_VERSION=dev
 ARG GIT_COMMIT=unknown
-ARG BUILD_DATE=unknown
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates && \
+    wget -O hugo.tar.gz "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" && \
+    tar -xzf hugo.tar.gz && \
+    mv hugo /usr/local/bin/hugo && \
+    rm -rf hugo.tar.gz /var/lib/apt/lists/*
 
 WORKDIR /src
 COPY . .
@@ -26,7 +36,7 @@ ENV HUGO_PARAMS_GITCOMMIT=$GIT_COMMIT
 RUN hugo --minify --environment production
 
 # Stage 2: Serve with Nginx (Alpine)
-FROM nginx:alpine
+FROM nginx:${NGINX_VERSION}-alpine
 
 ARG IMAGE_VERSION=dev
 ARG GIT_COMMIT=unknown

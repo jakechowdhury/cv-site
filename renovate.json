@@ -7,20 +7,23 @@
       "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions",
       "automerge": false
-    },
-    {
-      "matchManagers": ["dockerfile"],
-      "enabled": false
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["hugo-version:\\s+'(?<currentValue>[^']+)'"],
+      "fileMatch": ["^versions\\.env$"],
+      "matchStrings": ["HUGO_VERSION=(?<currentValue>[^\\n]+)"],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^versions\\.env$"],
+      "matchStrings": ["NGINX_VERSION=(?<currentValue>[^\\n]+)"],
+      "depNameTemplate": "nginx",
+      "datasourceTemplate": "docker"
     }
   ]
 }
