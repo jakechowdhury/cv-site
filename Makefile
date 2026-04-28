@@ -21,14 +21,15 @@ build: ## Build the Docker image
 		--build-arg IMAGE_VERSION=$(IMAGE_VERSION) \
 		--build-arg GIT_COMMIT=$(GIT_COMMIT) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BASE_URL=http://localhost:8080/ \
 		-t $(IMAGE_NAME):$(IMAGE_VERSION) \
 		-t $(IMAGE_NAME):dev .
 
 run: ## Run the Docker image locally on port 8080
-	docker run --rm -p 8080:8080 $(IMAGE_NAME):dev
+	docker run --rm --name $(IMAGE_NAME)-dev -p 8080:8080 $(IMAGE_NAME):dev
 
 stop: ## Stop any running cv-site containers
-	docker ps -q --filter ancestor=$(IMAGE_NAME):dev | xargs -r docker stop
+	docker stop $(IMAGE_NAME)-dev 2>/dev/null || true
 
 lint: ## Run all pre-commit hooks
 	pre-commit run --all-files
