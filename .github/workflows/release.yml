@@ -78,6 +78,13 @@ jobs:
             type=semver,pattern={{version}}
             type=raw,value=latest
 
+      - name: Read versions
+        id: versions
+        run: |
+          source versions.env
+          echo "hugo=${HUGO_VERSION}" >> $GITHUB_OUTPUT
+          echo "nginx=${NGINX_VERSION}" >> $GITHUB_OUTPUT
+
       - name: Build and push multi-arch image
         id: build-push
         uses: docker/build-push-action@v7
@@ -93,6 +100,8 @@ jobs:
             IMAGE_VERSION=${{ github.ref_name }}
             GIT_COMMIT=${{ github.sha }}
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            HUGO_VERSION=${{ steps.versions.outputs.hugo }}
+            NGINX_VERSION=${{ steps.versions.outputs.nginx }}
 
       - name: Update image tag in cv-gitops
         uses: actions/github-script@v9
