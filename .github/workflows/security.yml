@@ -6,6 +6,7 @@ on:
       - 'Dockerfile'
       - '.github/workflows/**'
       - 'nginx.conf'
+      - 'versions.env'
 
 permissions: {}
 
