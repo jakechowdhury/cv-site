@@ -12,16 +12,16 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^versions\\.env$"],
-      "matchStrings": ["HUGO_VERSION=(?<currentValue>[^\\n]+)"],
+      "fileMatch": ["^versions\\.env$", "^README\\.md$"],
+      "matchStrings": ["HUGO_VERSION=(?<currentValue>[^\\n]+)", "Hugo\\]\\(https://gohugo\\.io/\\) v(?<currentValue>[\\d\\.]+)"],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v?(?<version>.+)$"
     },
     {
       "customType": "regex",
-      "fileMatch": ["^versions\\.env$"],
-      "matchStrings": ["NGINX_VERSION=(?<currentValue>[^\\n]+)"],
+      "fileMatch": ["^versions\\.env$", "^README\\.md$"],
+      "matchStrings": ["NGINX_VERSION=(?<currentValue>[^\\n]+)", "Nginx v(?<currentValue>[\\d\\.]+) \\(Alpine\\)"],
       "depNameTemplate": "nginx",
       "datasourceTemplate": "docker"
     }
