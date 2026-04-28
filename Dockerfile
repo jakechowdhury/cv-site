@@ -1,5 +1,6 @@
 # Stage 1: Build Hugo site
-FROM hugomods/hugo:exts AS builder
+ARG HUGO_VERSION
+FROM hugomods/hugo:exts-${HUGO_VERSION} AS builder
 
 ARG IMAGE_VERSION=dev
 ARG GIT_COMMIT=unknown
@@ -26,7 +27,8 @@ ENV HUGO_PARAMS_GITCOMMIT=$GIT_COMMIT
 RUN hugo --minify --environment production
 
 # Stage 2: Serve with Nginx (Alpine)
-FROM nginx:alpine
+ARG NGINX_VERSION
+FROM nginx:${NGINX_VERSION}-alpine
 
 ARG IMAGE_VERSION=dev
 ARG GIT_COMMIT=unknown
