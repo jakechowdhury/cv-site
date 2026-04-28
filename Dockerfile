@@ -36,10 +36,12 @@ RUN if echo "$IMAGE_VERSION" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then \
       echo "INFO: Non-release build (${IMAGE_VERSION}), skipping VERSION file check"; \
     fi
 
+ARG BASE_URL=
+
 ENV HUGO_PARAMS_APPVERSION=$IMAGE_VERSION
 ENV HUGO_PARAMS_GITCOMMIT=$GIT_COMMIT
 
-RUN hugo --minify --environment production
+RUN hugo --minify --environment production ${BASE_URL:+--baseURL "$BASE_URL"}
 
 # Stage 2: Serve with Nginx (Alpine)
 FROM nginx:${NGINX_VERSION}-alpine
