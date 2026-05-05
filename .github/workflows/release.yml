@@ -58,7 +58,7 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v4.1.1
+        uses: sigstore/cosign-installer@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -109,7 +109,7 @@ jobs:
 
       - name: Sign image with Cosign
         run: |
-          cosign sign --yes --recursive \
+          cosign sign --yes \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-push.outputs.digest }}
 
       - name: Update image tag in cv-gitops
@@ -133,9 +133,7 @@ jobs:
             const { data: file } = await github.rest.repos.getContent({ owner, repo, path: filePath });
             const content = Buffer.from(file.content, 'base64').toString();
 
-            const digest = '${{ steps.build-push.outputs.digest }}';
-
-            let updated = content.replace(
+            const updated = content.replace(
               /newTag: (?:"latest"|sha-[a-f0-9]{7}|v?\d+\.\d+\.\d+)/,
               `newTag: ${imageTag}`
             );
@@ -143,12 +141,6 @@ jobs:
             if (updated === content) {
               throw new Error(`Tag replacement failed — no match in:\n${content}`);
             }
-
-            // Update existing digest line or insert one after newTag, preserving indentation
-            updated = updated.replace(
-              /(\n([ \t]*)newTag: [^\n]+)(\n\2digest: sha256:[a-f0-9]+)?/,
-              (_, tagLine, indent) => `${tagLine}\n${indent}digest: ${digest}`
-            );
 
             const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: 'heads/main' });
             await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branch}`, sha: ref.object.sha });
