@@ -109,7 +109,7 @@ jobs:
 
       - name: Sign image with Cosign
         run: |
-          cosign sign --yes \
+          cosign sign --yes --recursive \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-push.outputs.digest }}
 
       - name: Update image tag in cv-gitops
