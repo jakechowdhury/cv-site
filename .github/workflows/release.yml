@@ -18,6 +18,7 @@ jobs:
       contents: read
       packages: write
       actions: write
+      id-token: write
 
     steps:
       - name: Checkout
@@ -55,6 +56,9 @@ jobs:
             echo "$LOG"
             echo 'EOF'
           } >> $GITHUB_OUTPUT
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -103,6 +107,11 @@ jobs:
             HUGO_VERSION=${{ steps.versions.outputs.hugo }}
             NGINX_VERSION=${{ steps.versions.outputs.nginx }}
 
+      - name: Sign image with Cosign
+        run: |
+          cosign sign --yes \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-push.outputs.digest }}
+
       - name: Update image tag in cv-gitops
         uses: actions/github-script@v9
         with:
@@ -143,7 +152,7 @@ jobs:
               branch,
             });
 
-            await github.rest.pulls.create({
+            const pr = await github.rest.pulls.create({
               owner, repo, head: branch, base: 'main',
               title: `chore: update cv-site image to ${imageTag}`,
               body: [
@@ -157,3 +166,8 @@ jobs:
                 `Automated image tag update from cv-site@${context.sha}`,
               ].join('\n'),
             });
+
+            try {
+              await github.rest.issues.createLabel({ owner, repo, name: 'cv-release', color: '0075ca' });
+            } catch {}
+            await github.rest.issues.addLabels({ owner, repo, issue_number: pr.data.number, labels: ['cv-release'] });

@@ -50,6 +50,8 @@ ARG IMAGE_VERSION=dev
 ARG GIT_COMMIT=unknown
 ARG BUILD_DATE=unknown
 
+RUN apk upgrade --no-cache
+
 COPY --from=builder /src/public /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
