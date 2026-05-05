@@ -152,7 +152,7 @@ jobs:
               branch,
             });
 
-            await github.rest.pulls.create({
+            const pr = await github.rest.pulls.create({
               owner, repo, head: branch, base: 'main',
               title: `chore: update cv-site image to ${imageTag}`,
               body: [
@@ -166,3 +166,8 @@ jobs:
                 `Automated image tag update from cv-site@${context.sha}`,
               ].join('\n'),
             });
+
+            try {
+              await github.rest.issues.createLabel({ owner, repo, name: 'cv-release', color: '0075ca' });
+            } catch {}
+            await github.rest.issues.addLabels({ owner, repo, issue_number: pr.data.number, labels: ['cv-release'] });
