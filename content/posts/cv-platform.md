@@ -1,5 +1,5 @@
 ---
-title: "CV Platform - Building a Production-Grade Portfolio"
+title: "CV Platform - Building a Portfolio"
 date: 2026-03-01
 description: >
   How I built this CV site using k3s, ArgoCD, Cloudflare, Hugo, and Oracle OKE -
