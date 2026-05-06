@@ -92,14 +92,10 @@ menu:
       name: Certs
       url: /certs/
       weight: 30
-    - identifier: why
-      name: Why Is This Here
-      url: /why/
-      weight: 40
     - identifier: search
       name: Search
       url: /search/
-      weight: 50
+      weight: 40
 
 pygmentsUseClasses: true
 

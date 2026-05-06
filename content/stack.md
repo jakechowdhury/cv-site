@@ -17,7 +17,7 @@ Specialised toolset for modern infrastructure automation.
 | **CI/CD & GitOps** | GitHub Actions, Jenkins, Azure DevOps, ArgoCD, Renovate |
 | **Containers** | Docker, docker buildx (multi-arch), GitHub Container Registry |
 | **Scripting & Automation** | Python, Bash, AWS Lambda |
-| **Security** | Kyverno, Checkov, Trivy, AWS Config, Inspector, Sealed Secrets |
+| **Security** | Kyverno, Checkov, Trivy, AWS Config, Inspector |
 | **Observability** | Prometheus, Grafana, PagerDuty, kube-prometheus-stack |
 | **Storage** | Rook-Ceph, S3, Azure Storage |
-| **Networking** | Tailscale Funnel, AWS Front Door, API Management |
+| **Networking** | Transit Gateway, AWS WAF, API Management |
