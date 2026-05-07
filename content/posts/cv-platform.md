@@ -21,7 +21,7 @@ ShowBreadCrumbs: true
 
 This site is completely and deliberately over-engineered. My goal was to host not just my CV online but something I could point recruiters, interviewers, anyone to and say "here's how I work and how I think about infrastructure."
 
-I already had a small homelab, so the natural starting point was a self-managed Kubernetes cluster from bare metal - VM templating with Packer, infrastructure provisioned with OpenTofu and Terragrunt, configuration managed with Ansible, all bootstrapped into a three-node k3s HA cluster running GitOps via ArgoCD.
+I already had a small homelab, so my starting point was a self-managed Kubernetes cluster from bare metal - VM templating with Packer, infrastructure provisioned with OpenTofu and Terragrunt, configuration managed with Ansible, all bootstrapped into a three-node k3s HA cluster running GitOps via ArgoCD.
 
 From there I wanted to demonstrate cloud infrastructure using the same patterns. The OKE mirror cluster isn't there just to tick a cloud checkbox - it's there because building the self-managed version first means I actually understand what a managed service is doing for you.
 
@@ -45,7 +45,7 @@ The repositories:
 
 ### Homelab - [cv-platform](https://github.com/jakechowdhury/cv-platform)
 
-The homelab was my starting point - I already had a ThinkCentre running Proxmox for personal use. The first step was building a golden image with Packer, baking in everything the cluster nodes would need: qemu-guest-agent, swap disabled, and the kernel modules k3s requires. Getting this right once means every VM starts from a known, reproducible base.
+The homelab was my starting point - I already had a ThinkCentre running Proxmox for personal use. The first step was building a golden image with Packer, baking in everything the cluster nodes would need: qemu-guest-agent, swap disabled, and the kernel modules k3s requires.
 
 From there I provisioned three VMs using OpenTofu with Terragrunt. Terragrunt keeps the S3 backend config DRY across modules and lets me share variables - like remote state location - without repeating them. Anything sensitive lives in an env file outside of version control; if this were pipeline-driven I'd use CI/CD variables instead, but this is intentionally run locally.
 
@@ -53,17 +53,17 @@ With three VMs ready I used Ansible to configure them into a k3s HA cluster with
 
 ### Public Access
 
-I wanted a way to expose the site publicly without exposing my home network. I'd used Cloudflare Tunnels on a previous personal project and it suited this use case perfectly - no open ports on your router, TLS handled automatically, no cert-manager needed, no LoadBalancer needed, and most importantly - cost me nothing.
+I wanted a way to expose the site publicly without exposing my home network. I'd used Cloudflare Tunnels on a previous personal project and it suited this use case perfectly - no open ports on my router, TLS handled automatically, no cert-manager needed, no LoadBalancer needed, and most importantly - cost me nothing.
 
 In a production environment - AWS for example - I'd approach this differently: an ingress controller (NGINX, Traefik) using external-dns to manage DNS records and cert-manager with Let's Encrypt for certificate management, sat behind a cloud load balancer. Cloudflare Tunnels is the right call here precisely because this isn't that - it lets me focus on the Kubernetes side of the project without the overhead of managing ingress infrastructure on a homelab.
 
-The tunnel configuration is managed in the homelab repo using the same OpenTofu + Terragrunt pattern, and because both clusters share the same GitOps pipeline, any change to the tunnel config propagates to OKE automatically.
+The tunnel configuration is managed in the homelab repo using the same OpenTofu + Terragrunt pattern, this creates the token that is then stored as a secret on both clusters. I use a data lookup to the remote state to enable the OKE Cluster to be able to create this secret. I then use GitOps to deploy cloudflare across both clusters.
 
 ### GitOps - [cv-gitops](https://github.com/jakechowdhury/cv-gitops)
 
 ArgoCD is a tool I've used extensively and it was the natural choice for keeping both clusters in sync. The setup uses an App of Apps pattern - a root Application on each cluster that manages the child Applications, meaning I only need to maintain one set of manifests regardless of how many clusters are reading from them.
 
-Both clusters point at the same repo with no environment-specific overlays, which is intentional. The whole point of the OKE cluster is to be a true mirror of the homelab - if I introduced overlays I'd be managing drift, which defeats the purpose.
+Both clusters point at the same repo with no environment-specific overlays, which is intentional. The whole point of the OKE cluster is to be a true mirror of the homelab. If I introduced overlays I'd be managing drift, which defeats the purpose.
 
 For the manifests themselves I used Kustomize for my own application resources and Helm for infrastructure components like Traefik. Helm makes sense there because third-party charts benefit from a values file and Renovate can track chart versions automatically - using Kustomize for everything would mean managing those versions manually.
 
@@ -71,7 +71,7 @@ Renovate is configured across all four repos, keeping Helm chart versions, Terra
 
 ### The Website - [cv-site](https://github.com/jakechowdhury/cv-site)
 
-I'll be upfront - I'm not a frontend developer and this isn't meant to be anything fancy. Hugo with a clean theme does the job: fast, static, no runtime to manage.
+I'll be upfront - I'm not a frontend developer and this isn't meant to be anything fancy. Hugo with a theme (I finally picked) does the job.
 
 The Dockerfile uses a multistage build, compiling the Hugo site and copying the output into a small Nginx Alpine image to serve it. Because the homelab runs on x86 and the OCI nodes are ARM, images are built multi-arch using docker buildx (linux/amd64 + linux/arm64) and pushed to GitHub Container Registry.
 
@@ -103,7 +103,7 @@ The most interesting security addition is Cosign. Every image built by the relea
 
 ### A note on AI
 
-I used AI throughout this project - primarily Claude and Claude Code - as a tool for code generation, debugging, and working through problems.
+I used AI throughout this project, primarily Claude and Claude Code, as a tool for code generation, debugging, and working through problems.
 
 The architecture decisions, tool choices, and overall design are my own and reflect how I'd approach this kind of work professionally. AI helped me move faster, but the thinking behind it didn't come from a prompt. No different to how you'd use Stack Overflow or read through documentation.
 
