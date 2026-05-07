@@ -57,9 +57,7 @@ params:
     - name: linkedin
       url: "https://uk.linkedin.com/in/jake-chowdhury-7b715b49"
     - name: github
-      url: "https://github.com/"
-    - name: email
-      url: "mailto:contact@devops.engineer"
+      url: "https://github.com/jakechowdhury"
 
   # Cover images
   cover:
