@@ -10,7 +10,7 @@ Live at [cv.jakechowdhury.co.uk](https://cv.jakechowdhury.co.uk)
 |---|---|
 | Static site generator | [Hugo](https://gohugo.io/) v0.161.1 (extended) |
 | Theme | [PaperMod](https://github.com/adityatelange/hugo-PaperMod) |
-| Web server | Nginx v1.30.0 (Alpine) |
+| Web server | Nginx v1.31.5 (Alpine) |
 | Container registry | GitHub Container Registry (GHCR) |
 | Deployment | GitOps via [cv-gitops](https://github.com/jakechowdhury/cv-gitops) |
 
