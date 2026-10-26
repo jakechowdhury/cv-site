@@ -115,6 +115,6 @@ If someone asked me to just host a static website, I'd put it on GitHub Pages or
 
 The infrastructure CI/CD is also incomplete. Running Terraform in a pipeline with OIDC-based authentication rather than local credentials, drift detection, and automated plan/apply on PR merge are all things I'd add in a production context. Similarly there's no monitoring here - no alerting if the site goes down, no metrics. For a personal project that's an acceptable trade-off; for anything production-grade it wouldn't be.
 
-## What I have done differently now that this site has served its purpose. 
+## What I Did Differently Once It Served Its Purpose
 
-Like I mentioned above I'd just host this as a static site in something like an S3 bucket. What I actually did was put this into cloudflare and host this as a page in there. I already had DNS configured in here so made things very simple to move over. 
+As mentioned above, I always planned to end up hosting this as a plain static site. In practice I moved it to Cloudflare Pages rather than S3/CloudFront - I already had DNS managed there, so migrating was trivial.
