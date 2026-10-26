@@ -117,4 +117,4 @@ The infrastructure CI/CD is also incomplete. Running Terraform in a pipeline wit
 
 ## What I Did Differently Once It Served Its Purpose
 
-As mentioned above, I always planned to end up hosting this as a plain static site. In practice I moved it to Cloudflare Pages rather than S3/CloudFront - I already had DNS managed there, so migrating was trivial.
+As mentioned above, I always planned to end up hosting this as a plain static site. In practice I moved it to Cloudflare Pages rather than S3/CloudFront, I already had DNS managed there, so migrating was trivial.
