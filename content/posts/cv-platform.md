@@ -114,3 +114,7 @@ The aim of this site and the repos is still to show how I work and how I think a
 If someone asked me to just host a static website, I'd put it on GitHub Pages or an S3 bucket with CloudFront in front of it - and that's actually where this site will end up once it's served its purpose as a portfolio piece. The Kubernetes stack exists to demonstrate the stack, not because it's the right tool for hosting a CV.
 
 The infrastructure CI/CD is also incomplete. Running Terraform in a pipeline with OIDC-based authentication rather than local credentials, drift detection, and automated plan/apply on PR merge are all things I'd add in a production context. Similarly there's no monitoring here - no alerting if the site goes down, no metrics. For a personal project that's an acceptable trade-off; for anything production-grade it wouldn't be.
+
+## What I Did Differently Once It Served Its Purpose
+
+As mentioned above, I always planned to end up hosting this as a plain static site. In practice I moved it to Cloudflare Pages rather than S3/CloudFront, I already had DNS managed there, so migrating was trivial.
